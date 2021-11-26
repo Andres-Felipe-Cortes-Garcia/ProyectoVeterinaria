@@ -4,6 +4,7 @@ const User = require('../model/usermodel');
 const createError = require('http-errors');
 const {jsonResponse} = require('../lib/jsonresponse');
 const authMiddleware = require('../auth/auth.middleware'); 
+const bcrypt = require('bcrypt');
 
 /* GET users listing. */
 router.get('/',authMiddleware.checkAuth, async function(req, res, next) {
@@ -58,7 +59,7 @@ router.get('/:iduser', authMiddleware.checkAuth, async function(req, res, next) 
   res.json(jsonResponse(200, results));
 });
 
-router.patch('/:iduser', authMiddleware.checkAuth, async function(req, res, next) {
+router.patch('/:iduser', authMiddleware.checkAuth, function(req, res, next) {
   const {name, password} = req.body;
   let query = {};
 
@@ -69,22 +70,29 @@ router.patch('/:iduser', authMiddleware.checkAuth, async function(req, res, next
       query['name'] = name;
     }
     if(password){
-      query['password'] = password;
+      console.log('Password: ',password);
+      bcrypt.hash(password, 10, async(err, hash) => {
+        if(err)console.error(error);
+        else {
+          query['password'] = hash;
+          const results = await User.findOneAndUpdate({_id: req.params.iduser}, query);
+          if(!results) return next(new createError(400, `No user found`));
+          res.json(jsonResponse(200, {
+            message: `User ${req.params.iduser} updated successfully`
+          }));
+        };
+      })
     }
-    const results = await User.findOneAndUpdate({_id: req.params.iduser}, query);
     
-    if(!results) return next(new createError(400, `No user found`));
 
   }catch(ex){
     console.log(ex);
     next(createError(400, `Some of the fields couldn't be updated`))
   }
-
-  res.json(jsonResponse(200, {
-    message: `User ${req.params.iduser} updated successfully`
-  }));
   
 });
+
+
 
 
 module.exports = router;

@@ -29,6 +29,23 @@ UserSchema.pre('save', function(next){
         next();
     }
 });
+/* 
+UserSchema.pre('findOneAndUpdate', function(next){
+    if(this.isModified('password') || this.isNew){
+        const document = this;
+
+        bcrypt.hash(document.password, 10, (err, hash) => {
+            if(err){
+                next(err);
+            }else{
+                document.password = hash;
+                next();
+            }
+        })
+    }else{
+        next();
+    }
+}); */
 
 UserSchema.methods.usernameExists = async function(username){
     let result = await Mongoose.model('User').find({username: username});

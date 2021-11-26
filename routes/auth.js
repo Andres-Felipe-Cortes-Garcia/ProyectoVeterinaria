@@ -8,7 +8,7 @@ var router = express.Router();
 
 router.post('/signup', async function(req, res, next) {
   
-    const {username, password} = req.body;
+    const {username, password, name = null} = req.body;
 
     try{
 
@@ -18,7 +18,7 @@ router.post('/signup', async function(req, res, next) {
         if(userExists){
             return next(new Error('user already exists'));
         }else{
-            const user = new User({username, password});
+            const user = new User({username, password, name});
 
             let accessToken = await user.createAccessToken();
             let refreshToken = await user.createRefreshToken();
