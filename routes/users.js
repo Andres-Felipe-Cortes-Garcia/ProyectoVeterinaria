@@ -81,7 +81,8 @@ router.patch('/:iduser', authMiddleware.checkAuth, async function (req, res, nex
             message: `User ${req.params.iduser} updated successfully`
           }));
         };
-      })
+      });
+      return;
     }
     const results = await User.findOneAndUpdate({ _id: req.params.iduser }, query);
     if (!results) return next(new createError(400, `No user found`));
