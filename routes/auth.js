@@ -54,14 +54,20 @@ router.post('/login', async function(req, res, next) {
                 let refreshToken = await user.createRefreshToken();
 
                 return res.json({
-                    accessToken, refreshToken
+                    accessToken, refreshToken,response:"OK"
                 });
             }else{
-                return next(new Error('username and/or password incorrect'));
+                res.json({
+                    response:"ERROR. password incorrecto"
+                });
+                //return next(new Error('username and/or password incorrect'));
             }
                
         }else{
-            return next(new Error('user does not exist'));
+            res.json({
+                response:"ERROR. El usuario no existe"
+            });
+            //return next(new Error('user does not exist'));
         }
 
     }catch(err){

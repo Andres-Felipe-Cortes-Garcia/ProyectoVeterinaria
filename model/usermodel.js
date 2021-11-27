@@ -7,27 +7,27 @@ const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } = process.env;
 
 
 const UserSchema = new Mongoose.Schema({
-    id: {type: Object},
-    username: {type: String, required: true, unique: true},
-    password: {type: String, required: true},
-    name: {type: String}
+  id: { type: Object },
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String }
 });
 
-UserSchema.pre('save', function(next){
-    if(this.isModified('password') || this.isNew){
-        const document = this;
+UserSchema.pre('save', function (next) {
+  if (this.isModified('password') || this.isNew) {
+    const document = this;
 
-        bcrypt.hash(document.password, 10, (err, hash) => {
-            if(err){
-                next(err);
-            }else{
-                document.password = hash;
-                next();
-            }
-        })
-    }else{
+    bcrypt.hash(document.password, 10, (err, hash) => {
+      if (err) {
+        next(err);
+      } else {
+        document.password = hash;
         next();
-    }
+      }
+    })
+  } else {
+    next();
+  }
 });
 /* 
 UserSchema.pre('findOneAndUpdate', function(next){
@@ -47,46 +47,49 @@ UserSchema.pre('findOneAndUpdate', function(next){
     }
 }); */
 
-UserSchema.methods.usernameExists = async function(username){
-    let result = await Mongoose.model('User').find({username: username});
-    return result.length > 0;
+UserSchema.methods.usernameExists = async function (username) {
+  let result = await Mongoose.model('User').find({ username: username });
+  return result.length > 0;
 }
 
-UserSchema.methods.isCorrectPassword = async function(password, hash){
-    console.log(password, hash);
-    const same = await bcrypt.compare(password, hash);
+UserSchema.methods.isCorrectPassword = async function (password, hash) {
+  console.log(password, hash);
+  const same = await bcrypt.compare(password, hash);
 
-    return same;
+  return same;
 }
 
-UserSchema.methods.createAccessToken = function(){
-    const {id, username} = this;
-    const accessToken = jwt.sign(
-        { user: {id, username}}, 
-        ACCESS_TOKEN_SECRET, 
-        {expiresIn: '1d'}
-    );
+UserSchema.methods.createAccessToken = function () {
+  const { _id, username, name } = this;
+  const accessToken = jwt.sign(
+    {
+      user: { _id, username,name }
+    },
+    ACCESS_TOKEN_SECRET,
+    { expiresIn: '1d' }
+  );
 
-    return accessToken;
+  return accessToken;
+
 }
 
-UserSchema.methods.createRefreshToken = async function(){
-    const {id, username} = this;
-    const refreshToken = jwt.sign(
-        { user: {id, username}}, 
-        REFRESH_TOKEN_SECRET, 
-        {expiresIn: '1d'}
-    );
+UserSchema.methods.createRefreshToken = async function () {
+  const { id, username } = this;
+  const refreshToken = jwt.sign(
+    { user: { id, username } },
+    REFRESH_TOKEN_SECRET,
+    { expiresIn: '1d' }
+  );
 
-    try {
-        await new Token({token: refreshToken}).save();
+  try {
+    await new Token({ token: refreshToken }).save();
 
-        return refreshToken;
-    } catch (error) {
-        next(new Error('Error creating token'));
-    }
+    return refreshToken;
+  } catch (error) {
+    next(new Error('Error creating token'));
+  }
 
-    return accessToken;
+  return accessToken;
 }
 
 module.exports = Mongoose.model('User', UserSchema);
